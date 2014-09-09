@@ -2,12 +2,12 @@ package main
 
 import (
 	"flag"
-	dockerapi "github.com/fsouza/go-dockerclient"
 	"log"
 	"net/url"
 	"os"
 
-//    "bitbucket.org/naru-io/agent"
+	"bitbucket.org/naru-io/agent"
+	dockerapi "github.com/fsouza/go-dockerclient"
 )
 
 func getOpt(name, def string) string {
@@ -30,12 +30,22 @@ func main() {
 		log.Fatal("agent:", err)
 	}
 
+	//Storage and Docker with Manager
+	storage := agent.NewStorage(uri)
+	manager := &agent.Manager{
+		Docker:  docker,
+		Storage: storage,
+	}
+
+	//Docker events
 	events := make(chan *dockerapi.APIEvents)
 	if docker.AddEventListener(events) != nil {
 		log.Fatal("agent:", err)
 	}
 
 	log.Println("Starting agent")
+
+	manager.RegisterHostAndContainers()
 
 	for msg := range events {
 		switch msg.Status {
