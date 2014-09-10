@@ -12,6 +12,7 @@ type Storage interface {
 	AddContainer(container *Container) error
 	RemoveContainer(container *Container) error
 	UpdateContainer(container *Container) error
+	GetContainerIdsByHost(host *Host) ([]string, error)
 	AddListener(name string, listener Listener)
 }
 

@@ -6,6 +6,8 @@ import (
 	"github.com/coreos/go-etcd/etcd"
 	"log"
 	"net/url"
+	"strings"
+	"time"
 )
 
 const (
@@ -14,9 +16,10 @@ const (
 )
 
 type EtcdStorage struct {
-	Client   *etcd.Client
-	Path     string
-	HostPath string
+	Client         *etcd.Client
+	Path           string
+	HostPath       string
+	ContainersPath string
 }
 
 func NewEtcdStorage(uri *url.URL) Storage {
@@ -28,9 +31,15 @@ func NewEtcdStorage(uri *url.URL) Storage {
 	return &EtcdStorage{Client: etcd.NewClient(urls), Path: uri.Path}
 }
 
+func (e *EtcdStorage) containerPath(containerId string) string {
+	return e.ContainersPath + "/" + containerId
+
+}
+
 func (e *EtcdStorage) AddHost(host *Host) error {
 	hostId := host.ID
-	e.HostPath = fmt.Sprintf("%s/%s/%s", e.Path, HOST_STORAGE_PATH, hostId)
+	e.HostPath = fmt.Sprintf("%s%s/%s", e.Path, HOST_STORAGE_PATH, hostId)
+	e.ContainersPath = e.HostPath + "/" + CONTAINER_STORAGE_PATH
 
 	jsonstr, jerr := json.Marshal(host)
 	if jerr != nil {
@@ -54,7 +63,7 @@ func (e *EtcdStorage) AddHost(host *Host) error {
 }
 
 func (e *EtcdStorage) AddContainer(container *Container) error {
-	key := fmt.Sprintf("%s/%s/%s", e.HostPath, CONTAINER_STORAGE_PATH, container.ID)
+	key := e.containerPath(container.ID)
 	value, err := json.Marshal(container)
 	if err != nil {
 		log.Println(err)
@@ -78,6 +87,52 @@ func (e *EtcdStorage) UpdateContainer(container *Container) error {
 	return nil
 }
 
-func (e *EtcdStorage) AddListener(name string, listener Listener) {
+//TODO:Deprecated
+func (e *EtcdStorage) GetContainerIdsByHost(host *Host) ([]string, error) {
+	containerIds := make([]string, 0)
 
+	path := e.ContainersPath
+	resp, err := e.Client.Get(path, false, true)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, node := range resp.Node.Nodes {
+		cid := strings.Replace(node.Key, e.ContainersPath+"/", "", 1)
+		containerIds = append(containerIds, cid)
+	}
+
+	return containerIds, nil
+}
+
+func (e *EtcdStorage) AddListener(name string, listener Listener) {
+	path := e.ContainersPath + "/_future/"
+
+	watch := func() {
+		watchChannel := make(chan *etcd.Response)
+		go e.Client.Watch(path, 0, true, watchChannel, nil)
+		for {
+			resp, ok := <-watchChannel
+			if !ok {
+				break
+			}
+			//Call listener
+			//containers/_future/1 2 3 (Using Client.CreateInOrder)
+			var c Container
+			err := json.Unmarshal([]byte(resp.Node.Value), &c)
+			if err != nil {
+				log.Println("watch:", err)
+				continue
+			}
+			listener(resp.Node.Key, &c)
+		}
+		close(watchChannel)
+	}
+
+	go func() {
+		for {
+			go watch()
+			time.Sleep(500 * time.Millisecond)
+		}
+	}()
 }

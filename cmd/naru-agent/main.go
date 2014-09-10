@@ -45,7 +45,9 @@ func main() {
 
 	log.Println("Starting agent")
 
-	manager.RegisterHostAndContainers()
+	//Init process has two steps. one is registering host and containers.
+	//two is to start watching from etcd's _action file.
+	manager.Init()
 
 	for msg := range events {
 		switch msg.Status {

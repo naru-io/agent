@@ -10,7 +10,7 @@ import (
 	"testing"
 )
 
-func TestManagerRegisterHostAndContainers(t *testing.T) {
+func TestManagerInit(t *testing.T) {
 	docker, err := dockerapi.NewClient(os.Getenv("DOCKER_HOST"))
 	if err != nil {
 		log.Fatal("agent:", err)
@@ -24,7 +24,7 @@ func TestManagerRegisterHostAndContainers(t *testing.T) {
 		Storage: storage,
 	}
 
-	err = manager.RegisterHostAndContainers()
+	err = manager.Init()
 	if err != nil {
 		t.Error(err)
 	}

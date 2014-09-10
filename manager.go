@@ -13,16 +13,18 @@ type Manager struct {
 	Containers []*Container
 }
 
-func (m *Manager) RegisterHostAndContainers() error {
+func (m *Manager) Init() error {
 	host := NewHost(m.Docker)
 	serr := m.Storage.AddHost(host)
 	if serr != nil {
-		log.Fatal("agent: ", serr)
+		log.Printf("agent: ", serr)
+		return serr
 	}
 
 	apiContainers, err := m.Docker.ListContainers(dockerapi.ListContainersOptions{})
 	if err != nil {
-		log.Fatal("agent: ", err)
+		log.Println("agent: ", err)
+		return err
 	}
 
 	containers := make([]*Container, 0)
@@ -32,7 +34,6 @@ func (m *Manager) RegisterHostAndContainers() error {
 		containers = append(containers, container)
 		m.Storage.AddContainer(container)
 	}
-	log.Printf("%#v", containers)
 
 	return nil
 }
