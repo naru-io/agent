@@ -105,7 +105,7 @@ func (e *EtcdStorage) GetContainerIdsByHost(host *Host) ([]string, error) {
 	return containerIds, nil
 }
 
-func (e *EtcdStorage) AddListener(name string, listener Listener) {
+func (e *EtcdStorage) AddListener(listener Listener) {
 	path := e.ContainersPath + "/_future/"
 
 	watch := func() {
