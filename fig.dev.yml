@@ -12,3 +12,4 @@ agent:
         - etcd
     environment:
         - DOCKER_HOST=tcp://172.16.42.43:4243
+    hostname: testhost1

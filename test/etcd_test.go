@@ -1,7 +1,6 @@
-package agent
+package test
 
 import (
-	_ "../"
 	"github.com/coreos/go-etcd/etcd"
 	"testing"
 )

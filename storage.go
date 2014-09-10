@@ -8,9 +8,10 @@ import (
 type Listener func(name string, container *Container)
 
 type Storage interface {
-	Add(container *Container) error
-	Remove(container *Container) error
-	Update(container *Container) error
+	AddHost(host *Host) error
+	AddContainer(container *Container) error
+	RemoveContainer(container *Container) error
+	UpdateContainer(container *Container) error
 	AddListener(name string, listener Listener)
 }
 
