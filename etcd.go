@@ -9,12 +9,14 @@ import (
 )
 
 const (
-	HOST_STORAGE_URL = "/hosts"
+	HOST_STORAGE_PATH      = "hosts"
+	CONTAINER_STORAGE_PATH = "containers"
 )
 
 type EtcdStorage struct {
-	Client *etcd.Client
-	path   string
+	Client   *etcd.Client
+	Path     string
+	HostPath string
 }
 
 func NewEtcdStorage(uri *url.URL) Storage {
@@ -23,23 +25,25 @@ func NewEtcdStorage(uri *url.URL) Storage {
 		urls = append(urls, "http://"+uri.Host)
 	}
 
-	return &EtcdStorage{Client: etcd.NewClient(urls), path: uri.Path}
+	return &EtcdStorage{Client: etcd.NewClient(urls), Path: uri.Path}
 }
 
 func (e *EtcdStorage) AddHost(host *Host) error {
 	hostId := host.ID
-	path := fmt.Sprintf("%s/%s/_host", HOST_STORAGE_URL, hostId)
+	e.HostPath = fmt.Sprintf("%s/%s/%s", e.Path, HOST_STORAGE_PATH, hostId)
 
 	jsonstr, jerr := json.Marshal(host)
 	if jerr != nil {
 		return jerr
 	}
 
-	_, err := e.Client.SetDir(fmt.Sprintf("%s/%s", HOST_STORAGE_URL, hostId), 0)
+	//TODO: Check and then SetDir
+	_, err := e.Client.SetDir(e.HostPath, 0)
 	if err != nil {
-		log.Println(err)
+		log.Println("AddHost", err)
 	}
 
+	path := fmt.Sprintf("%s/_host", e.HostPath)
 	_, err = e.Client.Set(path, string(jsonstr), 0)
 	if err != nil {
 		log.Println(err)
@@ -50,6 +54,19 @@ func (e *EtcdStorage) AddHost(host *Host) error {
 }
 
 func (e *EtcdStorage) AddContainer(container *Container) error {
+	key := fmt.Sprintf("%s/%s/%s", e.HostPath, CONTAINER_STORAGE_PATH, container.ID)
+	value, err := json.Marshal(container)
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+
+	_, err = e.Client.Set(key, string(value), 0)
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+
 	return nil
 }
 

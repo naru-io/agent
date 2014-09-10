@@ -5,11 +5,12 @@ import (
 )
 
 type Container struct {
-	dockerapi.Container
+	dockerapi.APIContainers
 	Tags  []string
 	Attrs map[string]string
 }
 
-func NewContainer() *Container {
-	return &Container{}
+func NewContainer(apiContainer *dockerapi.APIContainers) *Container {
+	container := &Container{*apiContainer, nil, nil}
+	return container
 }

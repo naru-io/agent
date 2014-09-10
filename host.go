@@ -8,8 +8,8 @@ import (
 )
 
 const (
-	HOST_STATE_RUNNING = "running"
-	HOST_STATE_DOWN    = "down"
+	HOST_STATE_UP   = "up"
+	HOST_STATE_DOWN = "down"
 )
 
 type Host struct {
@@ -41,7 +41,7 @@ func NewHost(docker *dockerapi.Client) *Host {
 	host := &Host{
 		ID:              hostname,
 		Name:            hostname,
-		State:           HOST_STATE_RUNNING,
+		State:           HOST_STATE_UP,
 		KernelVersion:   kernelVersion,
 		OperatingSystem: operatingSystem,
 	} //TODO: more precise stable ID
