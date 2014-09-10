@@ -105,33 +105,49 @@ func (e *EtcdStorage) GetContainerIdsByHost(host *Host) ([]string, error) {
 	return containerIds, nil
 }
 
-func (e *EtcdStorage) AddListener(listener Listener) {
-	path := e.ContainersPath + "/_future/"
+func (e *EtcdStorage) Set(key string, value string) error {
+	_, err := e.Client.Set(key, value, 0)
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+
+	return nil
+}
+
+func (e *EtcdStorage) Get(key string) string {
+	resp, err := e.Client.Get(key, false, false)
+	if err != nil {
+		return ""
+	}
+	return resp.Node.Value
+}
+
+//TODO Need better naming
+func (e *EtcdStorage) AddListener(name string, listener Listener) {
+	path := fmt.Sprintf("%s/_future/%s", e.ContainersPath, name)
 
 	watch := func() {
+		log.Println("S:Watch", name)
 		watchChannel := make(chan *etcd.Response)
+		stopChannel := make(chan bool)
 		go e.Client.Watch(path, 0, true, watchChannel, nil)
 		for {
 			resp, ok := <-watchChannel
 			if !ok {
 				break
 			}
-			//Call listener
-			//containers/_future/1 2 3 (Using Client.CreateInOrder)
-			var c Container
-			err := json.Unmarshal([]byte(resp.Node.Value), &c)
-			if err != nil {
-				log.Println("watch:", err)
-				continue
-			}
-			listener(resp.Node.Key, &c)
+			log.Println("Listen", name)
+			listener(resp.Node.Key, resp.Node.Value)
 		}
+		stopChannel <- true
 		close(watchChannel)
+		log.Println("E:Watch", name)
 	}
 
 	go func() {
 		for {
-			go watch()
+			watch()
 			time.Sleep(500 * time.Millisecond)
 		}
 	}()

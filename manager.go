@@ -21,7 +21,7 @@ func (m *Manager) Init() error {
 		return serr
 	}
 
-	apiContainers, err := m.Docker.ListContainers(dockerapi.ListContainersOptions{})
+	dockerContainers, err := m.Docker.ListContainers(dockerapi.ListContainersOptions{})
 	if err != nil {
 		log.Println("agent: ", err)
 		return err
@@ -29,74 +29,22 @@ func (m *Manager) Init() error {
 
 	containers := make([]*Container, 0)
 
-	for _, c := range apiContainers {
-		container := NewContainer(&c)
+	for _, c := range dockerContainers {
+		dockerContainer, _ := m.Docker.InspectContainer(c.ID)
+		container := NewContainer(dockerContainer)
 		containers = append(containers, container)
 		m.Storage.AddContainer(container)
 	}
 
-	m.Storage.AddListener(m.CreateContainerListener)
+	m.Storage.AddListener("create", m.CreateContainerListener)
+	m.Storage.AddListener("stop", m.StopContainerListener)
 	return nil
 }
 
-func (m *Manager) CreateContainerListener(name string, container *Container) {
-	action := container.Action
-	if action == "" {
-		log.Println("container's action empty")
-		return
-	}
+func (m *Manager) CreateContainerListener(key string, value string) {
+	log.Println("CreateContainer:", key, value)
+}
 
-	if action != "create" {
-		log.Println("Currently only create container")
-		return
-	}
-
-	imageName := container.Image
-	images, err := m.Docker.ListImages(false)
-	if err != nil {
-		log.Println(err)
-		return
-	}
-
-	ok := false
-	for _, image := range images {
-		for _, repoTag := range image.RepoTags {
-			if imageName == repoTag {
-				ok = true
-				break
-			}
-		}
-	}
-
-	//Pull image
-	if !ok {
-		//Pull Image
-		opts := dockerapi.PullImageOptions{Repository: imageName}
-		auth := dockerapi.AuthConfiguration{}
-		err = m.Docker.PullImage(opts, auth)
-		if err != nil {
-			log.Println(err)
-			/*
-				container.Status = "Failed Pull Image"
-				value, _ := json.Marshal(container)
-				//TODO: Use Storage's method!
-				_, err = m.Storage.Client.Set(name, string(value), 0)
-				if err != nil {
-					log.Println(err)
-					return
-				}
-			*/
-		}
-	}
-
-	//Create container
-	opts := dockerapi.CreateContainerOptions{Name: container.Names[0], Config: &container.Config}
-
-	_container, err := m.Docker.CreateContainer(opts)
-	if err != nil {
-		log.Println(err)
-		return
-	}
-
-	log.Printf("%#v", _container)
+func (m *Manager) StopContainerListener(key string, value string) {
+	log.Println("StopContainer:", key, value)
 }

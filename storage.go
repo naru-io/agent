@@ -5,7 +5,7 @@ import (
 	"net/url"
 )
 
-type Listener func(name string, container *Container)
+type Listener func(key string, value string)
 
 type Storage interface {
 	AddHost(host *Host) error
@@ -13,7 +13,10 @@ type Storage interface {
 	RemoveContainer(container *Container) error
 	UpdateContainer(container *Container) error
 	GetContainerIdsByHost(host *Host) ([]string, error)
-	AddListener(listener Listener)
+	AddListener(name string, listener Listener)
+
+	Set(key string, value string) error
+	Get(key string) string
 }
 
 func NewStorage(uri *url.URL) Storage {

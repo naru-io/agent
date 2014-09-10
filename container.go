@@ -5,14 +5,12 @@ import (
 )
 
 type Container struct {
-	dockerapi.APIContainers
-	Action string           `json:"action,omitempty`
-	Config dockerapi.Config `json:"config,omitempty`
-	Tags   []string
-	Attrs  map[string]string
+	dockerapi.Container
+	Tags  []string
+	Attrs map[string]string
 }
 
-func NewContainer(apiContainer *dockerapi.APIContainers) *Container {
-	container := &Container{*apiContainer, "", dockerapi.Config{}, nil, nil}
+func NewContainer(apiContainer *dockerapi.Container) *Container {
+	container := &Container{*apiContainer, nil, nil}
 	return container
 }
