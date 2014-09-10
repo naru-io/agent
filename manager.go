@@ -37,10 +37,24 @@ func (m *Manager) Init() error {
 		m.Storage.AddContainer(container)
 	}
 
+	m.Storage.AddListener("pull", m.PullImageListener)
 	m.Storage.AddListener("create", m.CreateContainerListener)
 	m.Storage.AddListener("start", m.StartContainerListener)
 	m.Storage.AddListener("stop", m.StopContainerListener)
 	return nil
+}
+
+func (m *Manager) PullImageListener(key, value string) {
+	log.Println("S:PullImageListener:", key, value)
+
+	var opts dockerapi.PullImageOptions
+	err := json.Unmarshal([]byte(value), &opts)
+
+	err = m.Docker.PullImage(opts, dockerapi.AuthConfiguration{})
+	if err != nil {
+		log.Println(err)
+	}
+	log.Println("E:PullImageListener:", key, value)
 }
 
 func (m *Manager) CreateContainerListener(key string, value string) {
