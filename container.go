@@ -14,3 +14,8 @@ func NewContainer(apiContainer *dockerapi.Container) *Container {
 	container := &Container{*apiContainer, nil, nil}
 	return container
 }
+
+type StartContainerOptions struct {
+	ID         string
+	HostConfig *dockerapi.HostConfig
+}
