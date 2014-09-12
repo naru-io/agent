@@ -1,0 +1,16 @@
+{
+	"ImportPath": "bitbucket.org/naru-io/agent",
+	"GoVersion": "go1.2.1",
+	"Deps": [
+		{
+			"ImportPath": "github.com/coreos/go-etcd/etcd",
+			"Comment": "v0.2.0-rc1-120-g23142f6",
+			"Rev": "23142f6773a676cc2cae8dd0cb90b2ea761c853f"
+		},
+		{
+			"ImportPath": "github.com/fsouza/go-dockerclient",
+			"Comment": "0.2.1-245-gf78c5cd",
+			"Rev": "f78c5cda09b1be9d35d2aac9fca91c94e3719915"
+		}
+	]
+}

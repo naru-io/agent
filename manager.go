@@ -78,6 +78,8 @@ func (m *Manager) CreateContainerListener(key string, value string) {
 	if err != nil {
 		log.Println(err)
 	}
+
+    log.Println("E:CreateContainer",key,value,container)
 }
 
 func (m *Manager) StartContainerListener(key string, value string) {
