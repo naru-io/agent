@@ -6,8 +6,8 @@ import (
 	"net/url"
 	"os"
 
-	"bitbucket.org/naru-io/agent"
 	dockerapi "github.com/fsouza/go-dockerclient"
+	"github.com/naru-io/agent"
 )
 
 func getOpt(name, def string) string {
