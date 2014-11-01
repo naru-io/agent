@@ -5,7 +5,7 @@ etcd:
         - "7001:7001"
 agent:
     build: .
-    command: go run src/bitbucket.org/naru-io/agent/cmd/naru-agent/main.go etcd://etcd_1:4001
+    command: go run src/github.com/naru-io/agent/cmd/naru-agent/main.go etcd://etcd_1:4001
     volumes:
         - ../../../:/gopath/src
         - /var/run/docker.sock:/var/run/docker.sock
